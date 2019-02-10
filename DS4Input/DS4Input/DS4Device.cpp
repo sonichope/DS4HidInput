@@ -220,7 +220,7 @@ bool DS4Device::GetButton(DS4KeyType keyType)
 		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
 		break;
 	case DS4KeyType::R3:
-		statusData = status.l3.status;
+		statusData = status.r3.status;
 		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
 		break;
 	}
@@ -286,7 +286,7 @@ bool DS4Device::GetButtonDown(DS4KeyType keyType)
 		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
 		break;
 	case DS4KeyType::R3:
-		statusData = status.l3.status;
+		statusData = status.r3.status;
 		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
 		break;
 	}
@@ -352,7 +352,7 @@ bool DS4Device::GetButtonUp(DS4KeyType keyType)
 		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
 		break;
 	case DS4KeyType::R3:
-		statusData = status.l3.status;
+		statusData = status.r3.status;
 		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
 		break;
 	}
