@@ -8,6 +8,7 @@
 class DS4Device
 {
 public:
+	DS4Device();
 	DS4Device Create(HidDevice device, int controllerId);
 	bool SendOutputReport();
 	bool ChangeLedColor(LED led);

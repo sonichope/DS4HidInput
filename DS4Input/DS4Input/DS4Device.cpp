@@ -1,5 +1,10 @@
 #include "DS4Device.h"
 
+DS4Device::DS4Device()
+{
+	controllerNum = -1;
+}
+
 DS4Device DS4Device::Create(HidDevice device, int controllerId)
 {
 	this->device = device;
@@ -158,7 +163,7 @@ bool DS4Device::Destroy()
 
 bool DS4Device::IsDS4Device()
 {
-	return device.isDevice;
+	return controllerNum >= 0;
 }
 
 bool DS4Device::GetButton(DS4KeyType keyType)
