@@ -80,21 +80,25 @@ void DS4Manager::InputUpdate()
 
 bool DS4Manager::GetButton(const int id, const DS4KeyType key) const
 {
+	if (IsDevice(id) == false) { return false; }
 	return ds4Device[id].GetButton(key);
 }
 
 bool DS4Manager::GetButtonDown(const int id, const DS4KeyType key) const
 {
+	if (IsDevice(id) == false) { return false; }
 	return ds4Device[id].GetButtonDown(key);
 }
 
 bool DS4Manager::GetButtonUp(const int id, const DS4KeyType key) const
 {
+	if (IsDevice(id) == false) { return false; }
 	return ds4Device[id].GetButtonUp(key);
 }
 
 float DS4Manager::GetAxis(const int id, const DS4AxisType axis) const
 {
+	if (IsDevice(id) == false) { return false; }
 	return ds4Device[id].GetAxis(axis);
 }
 
