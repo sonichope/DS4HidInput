@@ -1,18 +1,18 @@
-#include "DS4Button.h"
+#include "DSenseButton.h"
 
-DS4Button::DS4Button()
+DSenseButton::DSenseButton()
 {
 	status = DSButtonStatus::None;
 }
 
-DS4Button::DS4Button(bool isButtonDown)
+DSenseButton::DSenseButton(bool isButtonDown)
 {
 	ChangeStatus(isButtonDown);
 }
 
-void DS4Button::ChangeStatus(bool isButtonDown)
+void DSenseButton::ChangeStatus(bool isButtonDown)
 {
-	if (isButtonDown == true)
+	if (isButtonDown)
 	{
 		if (status == DSButtonStatus::None)
 		{
@@ -29,11 +29,11 @@ void DS4Button::ChangeStatus(bool isButtonDown)
 		if (status == DSButtonStatus::UnPush)
 		{
 			status = DSButtonStatus::Push;
+			return;
 		}
-		return;
+		
 	}
-
-	if (isButtonDown == false)
+	else
 	{
 		if (status == DSButtonStatus::Push)
 		{
@@ -50,7 +50,7 @@ void DS4Button::ChangeStatus(bool isButtonDown)
 		if (status == DSButtonStatus::UnPush)
 		{
 			status = DSButtonStatus::None;
+			return;
 		}
-		return;
 	}
 }

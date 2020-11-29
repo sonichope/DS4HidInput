@@ -1,37 +1,35 @@
 #include "DS4Device.h"
+#include "DSKeyType.h"
+#include "DSAxisType.h"
 
 const int BT_OUTPUT_REPORT_LENGTH = 78;
 const int BT_INPUT_REPORT_LENGTH = 547;
 
-DS4Device::DS4Device(): device(), inputDataLength(0), outputDataLength(0), status(), controllerNum(0)
-{
-}
-
-DS4Device DS4Device::Create(HidDevice device, const int controllerId)
+DS4Device::DS4Device(HidDevice device, int controllerId)
 {
 	this->device = device;
 	this->controllerNum = controllerId;
 	outputDataLength = device.GetCapabilities().OutputReportByteLength;
 	inputDataLength = device.GetCapabilities().InputReportByteLength;
 
-	if(outputDataLength == 547)
+	if (outputDataLength == 547)
 	{
 		outputData = new UCHAR[BT_OUTPUT_REPORT_LENGTH];
 		inputData = new UCHAR[BT_INPUT_REPORT_LENGTH];
 		outputDataLength = BT_OUTPUT_REPORT_LENGTH;
 		inputDataLength = BT_INPUT_REPORT_LENGTH;
-	}else
+	}
+	else
 	{
 		outputData = new UCHAR[outputDataLength];
 		inputData = new UCHAR[inputDataLength];
 	}
-	
 
-	for (auto i = 0; i < inputDataLength; i++)
+	for (int i = 0; i < inputDataLength; i++)
 	{
 		inputData[i] = 0;
 	}
-	for (auto i = 0; i < outputDataLength; i++)
+	for (int i = 0; i < outputDataLength; i++)
 	{
 		outputData[i] = 1;
 	}
@@ -58,7 +56,6 @@ DS4Device DS4Device::Create(HidDevice device, const int controllerId)
 		outputData[4] = 0x00;//Rモータ
 		outputData[5] = 0x00;//Lモータ
 	}
-	
 
 	switch (controllerId)
 	{
@@ -77,28 +74,26 @@ DS4Device DS4Device::Create(HidDevice device, const int controllerId)
 	}
 
 	SendOutputReport();
-
-	return *this;
 }
 
 bool DS4Device::SendOutputReport()
 {
 	BOOL result;
-	DWORD size = 0;
+	DWORD sizet = 0;
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	if(inputDataLength == BT_INPUT_REPORT_LENGTH)
+	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
 		result = HidD_SetOutputReport(device.GetHandle(), outputData, outputDataLength);
 	}
 	else
 	{
-		result = WriteFile(device.GetHandle(), outputData, outputDataLength, &size, &overlapped);
+		result = WriteFile(device.GetHandle(), outputData, outputDataLength, &sizet, &overlapped);
 	}
 	return result;
 }
 
-bool DS4Device::ChangeLedColor(const LED led) const
+bool DS4Device::ChangeLedColor(LED led)
 {
 	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
@@ -112,11 +107,10 @@ bool DS4Device::ChangeLedColor(const LED led) const
 		outputData[7] = led.green;
 		outputData[8] = led.blue;
 	}
-	
 	return true;
 }
 
-void DS4Device::ChangeVibration(const UCHAR right, const UCHAR left) const
+void DS4Device::ChangeVibration(UCHAR right, UCHAR left)
 {
 	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
@@ -128,7 +122,6 @@ void DS4Device::ChangeVibration(const UCHAR right, const UCHAR left) const
 		outputData[4] = right;
 		outputData[5] = left;
 	}
-	
 }
 
 bool DS4Device::GetInputReport()
@@ -141,7 +134,7 @@ bool DS4Device::GetInputReport()
 
 	if (!static_cast<bool>(result)) { return result; }
 
-	if(inputDataLength == BT_INPUT_REPORT_LENGTH)
+	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
 		auto data = inputData[1];
 		if (data == 0x40) { return result; }
@@ -299,35 +292,36 @@ bool DS4Device::Destroy()
 	return true;
 }
 
-bool DS4Device::IsDS4Device() const
+bool DS4Device::IsDSDevice()
 {
-	return device.isDevice;
+	DWORD sizet = 0;
+	OVERLAPPED overlapped;
+	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
+	BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &sizet, &overlapped);
+	return result;
 }
 
-bool DS4Device::GetButton(const DS4KeyType keyType) const
+bool DS4Device::GetButton(UCHAR keyType)
 {
-	DS4ButtonStatus statusData = {};
-	statusData = status.data[keyType].status;
+	 const DSButtonStatus &statusData = status.data[keyType].status;
 	return statusData == Pushing || statusData == Push;
 }
 
-bool DS4Device::GetButtonDown(const DS4KeyType keyType) const
+bool DS4Device::GetButtonDown(UCHAR keyType)
 {
-	DS4ButtonStatus statusData = {};
-	statusData = status.data[keyType].status;
+	const DSButtonStatus &statusData = status.data[keyType].status;
 	return statusData == Push;
 }
 
-bool DS4Device::GetButtonUp(const DS4KeyType keyType) const
+bool DS4Device::GetButtonUp(UCHAR keyType)
 {
-	DS4ButtonStatus statusData = {};
-	statusData = status.data[keyType].status;
+	 DSButtonStatus &statusData = status.data[keyType].status;
 	return statusData == UnPush;
 }
 
-float DS4Device::GetAxis(const DS4AxisType axisType) const
+float DS4Device::GetAxis(UCHAR axisType)
 {
-	switch (axisType)
+	switch ((DSAxisType)axisType)
 	{
 	case RightStickX:
 		return status.rightStickX;

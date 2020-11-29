@@ -1,11 +1,12 @@
 #pragma once
 #include "DS4ButtonStatus.h"
 
-struct DS4Button
+struct DSenseButton
 {
 	DSButtonStatus status;
 
-	DS4Button();
-	DS4Button(bool isButtonDown);
+	DSenseButton();
+	DSenseButton(bool isButtonDown);
 	void ChangeStatus(bool isButtonDown);
 };
+

@@ -1,6 +1,6 @@
 #pragma once
 
-enum DS4ButtonStatus : unsigned char
+enum DSButtonStatus : unsigned char
 {
 	None = 0,
 	Push,

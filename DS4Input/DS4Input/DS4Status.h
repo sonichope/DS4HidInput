@@ -29,7 +29,7 @@ struct DS4Status
 			DS4Button data[14];
 		};
 	};
-	
+
 	float l2{};
 	float r2{};
 	float rightStickX{};
@@ -38,4 +38,4 @@ struct DS4Status
 	float leftStickY{};
 };
 
-inline DS4Status::DS4Status()= default;
+inline DS4Status::DS4Status() = default;

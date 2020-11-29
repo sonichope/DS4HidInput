@@ -85,9 +85,6 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -123,14 +120,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DS4AxisType.h" />
     <ClInclude Include="DS4Button.h" />
     <ClInclude Include="DS4ButtonStatus.h" />
     <ClInclude Include="DS4Device.h" />
     <ClInclude Include="DS4Input_dll.h" />
-    <ClInclude Include="DS4KeyType.h" />
     <ClInclude Include="DS4Manager.h" />
     <ClInclude Include="DS4Status.h" />
+    <ClInclude Include="DSAxisType.h" />
+    <ClInclude Include="DSDevice.h" />
+    <ClInclude Include="DSenseButton.h" />
+    <ClInclude Include="DSenseDevice.h" />
+    <ClInclude Include="DSenseStatus.h" />
+    <ClInclude Include="DSKeyType.h" />
     <ClInclude Include="HidDevice.h" />
     <ClInclude Include="Led.h" />
   </ItemGroup>
@@ -139,8 +140,14 @@
     <ClCompile Include="DS4Device.cpp" />
     <ClCompile Include="DS4Input_dll.cpp" />
     <ClCompile Include="DS4Manager.cpp" />
+    <ClCompile Include="DSenseButton.cpp" />
+    <ClCompile Include="DSenseDevice.cpp" />
+    <ClCompile Include="DSenseStatus.cpp" />
     <ClCompile Include="HidDevice.cpp" />
     <ClCompile Include="Led.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

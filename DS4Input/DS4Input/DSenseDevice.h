@@ -1,13 +1,14 @@
 #pragma once
 #include "DSDevice.h"
-#include "DS4Status.h"
+#include "DSenseStatus.h"
 
-class DS4Device : public DSDevice
+class DSenseDevice : public DSDevice
 {
 public:
-	DS4Device(HidDevice device, int controllerId);
+	DSenseDevice(HidDevice device, int controllerId);
+	bool ChangeLedColor(LED led);
+	void ChangePlayerLight(UCHAR val) override;
 	bool SendOutputReport() override;
-	bool ChangeLedColor(LED led) override;
 	void ChangeVibration(UCHAR right, UCHAR left) override;
 	bool GetInputReport() override;
 	bool Destroy() override;
@@ -21,8 +22,9 @@ private:
 	HidDevice device;
 	USHORT inputDataLength;
 	USHORT outputDataLength;
-	UCHAR* outputData = nullptr;
-	UCHAR* inputData = nullptr;
-	DS4Status status;
+	UCHAR outputData[48];
+	UCHAR inputData[64];
+	DSenseStatus status;
 	int controllerNum;
 };
+

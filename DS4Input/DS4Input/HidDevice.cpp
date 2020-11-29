@@ -1,6 +1,6 @@
 #include "HidDevice.h"
 
-HidDevice HidDevice::Create(const char * path, int id)
+HidDevice HidDevice::Create(char * path, int id)
 {
 	//パスのコピー
 	size_t size = 1;
@@ -20,10 +20,10 @@ HidDevice HidDevice::Create(const char * path, int id)
 		devicePath,
 		(GENERIC_READ | GENERIC_WRITE),
 		(FILE_SHARE_READ | FILE_SHARE_WRITE),
-		nullptr,
+		NULL,
 		OPEN_EXISTING, 
 		FILE_ATTRIBUTE_NORMAL,
-		nullptr);
+		NULL);
 
 	HIDD_ATTRIBUTES attributes;
 	if (HidD_GetAttributes(deviceHandle, &attributes))
@@ -38,55 +38,51 @@ HidDevice HidDevice::Create(const char * path, int id)
 	return *this;
 }
 
-HANDLE HidDevice::GetHandle() const
+HANDLE HidDevice::GetHandle()
 {
 	return deviceHandle;
 }
 
-USHORT HidDevice::GetProductID() const
+USHORT HidDevice::GetProductID()
 {
 	return productID;
 }
 
-USHORT HidDevice::GetVendorID() const
+USHORT HidDevice::GetVendorID()
 {
 	return vendorID;
 }
 
-char * HidDevice::GetDevicePath() const
+char * HidDevice::GetDevicePath()
 {
 	return devicePath;
 }
 
 HIDP_CAPS HidDevice::GetCapabilities()
 {
-	if (isCapabilities)
+	if (isCapabilities == true)
 	{
 		return capabilities;
 	}
 
-	PHIDP_PREPARSED_DATA preparedData;
-	if (HidD_GetPreparsedData(deviceHandle, &preparedData))
+	PHIDP_PREPARSED_DATA preparsedData;
+	if (HidD_GetPreparsedData(deviceHandle, &preparsedData))
 	{
 		//基本情報の取得
-		if (HIDP_STATUS_SUCCESS == HidP_GetCaps(preparedData, &capabilities))
+		if (HIDP_STATUS_SUCCESS == HidP_GetCaps(preparsedData, &capabilities))
 		{
 			isCapabilities = true;
 		}
 	}
 
-	HidD_FreePreparsedData(preparedData);
+	HidD_FreePreparsedData(preparsedData);
 
 	return capabilities;
 }
 
 void HidDevice::Destroy()
 {
-	productID = 0;
-	vendorID = 0;
 	isDevice = false;
 	CloseHandle(deviceHandle);
-	deviceHandle = nullptr;
 	delete[] devicePath;
-	devicePath = nullptr;
 }
