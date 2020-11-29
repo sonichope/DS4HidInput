@@ -1,24 +1,24 @@
 #include "DS4Manager.h"
 
+DS4Manager::DS4Manager() = default;
+
 void DS4Manager::GetDevice()
 {
 	connectionNum = 0;
 	GUID hidGuid;
-	HDEVINFO hdevInfo;
 	HidD_GetHidGuid(&hidGuid);
-	hdevInfo = SetupDiGetClassDevs(&hidGuid, NULL, NULL, (DIGCF_PRESENT | DIGCF_INTERFACEDEVICE));
+	const auto deviInfo = SetupDiGetClassDevs(&hidGuid, nullptr, nullptr, (DIGCF_PRESENT | DIGCF_INTERFACEDEVICE));
 	SP_DEVICE_INTERFACE_DATA data;
 	data.cbSize = sizeof(SP_INTERFACE_DEVICE_DATA);
-	for (int i = 0; SetupDiEnumDeviceInterfaces(hdevInfo, NULL, &hidGuid, i, &data); i++)
+	for (auto i = 0; SetupDiEnumDeviceInterfaces(deviInfo, nullptr, &hidGuid, i, &data); i++)
 	{
-		PSP_INTERFACE_DEVICE_DETAIL_DATA detail;
 		DWORD size = 0;
 
 		//デバイスインタフェース詳細情報のメモリサイズを取得
-		SetupDiGetDeviceInterfaceDetail(hdevInfo, &data, NULL, 0, &size, NULL);
+		SetupDiGetDeviceInterfaceDetail(deviInfo, &data, nullptr, 0, &size, nullptr);
 
 		//デバイスインターフェース詳細情報の領域を確保する
-		detail = new SP_INTERFACE_DEVICE_DETAIL_DATA[size];
+		auto detail = new SP_INTERFACE_DEVICE_DETAIL_DATA[size];
 		if (detail)
 		{
 			DWORD len = 0;
@@ -26,7 +26,7 @@ void DS4Manager::GetDevice()
 
 			//デバイスインターフェースの詳細情報を読込む
 			detail->cbSize = sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
-			if (SetupDiGetInterfaceDeviceDetail(hdevInfo, &data, detail, size, &len, NULL))
+			if (SetupDiGetInterfaceDeviceDetail(deviInfo, &data, detail, size, &len, NULL))
 			{
 				//Hidデバイスの作成
 				HidDevice device = device.Create(detail->DevicePath, 0);
@@ -46,54 +46,54 @@ void DS4Manager::GetDevice()
 		}
 		delete[] detail;
 	}
-	SetupDestroyDiskSpaceList(hdevInfo);
+	SetupDestroyDiskSpaceList(deviInfo);
 }
 
-bool DS4Manager::IsDevice(int id)
+bool DS4Manager::IsDevice(const int id) const
 {
 	return ds4Device[id].IsDS4Device();
 }
 
-void DS4Manager::ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b)
+void DS4Manager::ChangeColor(const int id, const UCHAR r, const UCHAR g, const UCHAR b) const
 {
 	ds4Device[id].ChangeLedColor(LED(r, g, b));
 }
 
-void DS4Manager::ChangeVibration(int id, UCHAR right, UCHAR left)
+void DS4Manager::ChangeVibration(const int id, const UCHAR right, const UCHAR left) const
 {
 	ds4Device[id].ChangeVibration(right, left);
 }
 
-void DS4Manager::SendOutput(int id)
+void DS4Manager::SendOutput(const int id)
 {
 	ds4Device[id].SendOutputReport();
 }
 
 void DS4Manager::InputUpdate()
 {
-	for (int i = 0; i < 4; i++)
+	for (auto i = 0; i < 4; i++)
 	{
-		if (ds4Device[i].IsDS4Device() == false) { return; }
+		if (!ds4Device[i].IsDS4Device()) { continue; }
 		ds4Device[i].GetInputReport();
 	}
 }
 
-bool DS4Manager::GetButton(int id, DS4KeyType key)
+bool DS4Manager::GetButton(const int id, const DS4KeyType key) const
 {
 	return ds4Device[id].GetButton(key);
 }
 
-bool DS4Manager::GetButtonDown(int id, DS4KeyType key)
+bool DS4Manager::GetButtonDown(const int id, const DS4KeyType key) const
 {
 	return ds4Device[id].GetButtonDown(key);
 }
 
-bool DS4Manager::GetButtonUp(int id, DS4KeyType key)
+bool DS4Manager::GetButtonUp(const int id, const DS4KeyType key) const
 {
 	return ds4Device[id].GetButtonUp(key);
 }
 
-float DS4Manager::GetAxis(int id, DS4AxisType axis)
+float DS4Manager::GetAxis(const int id, const DS4AxisType axis) const
 {
 	return ds4Device[id].GetAxis(axis);
 }

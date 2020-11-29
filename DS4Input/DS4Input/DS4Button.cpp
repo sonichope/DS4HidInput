@@ -2,54 +2,54 @@
 
 DS4Button::DS4Button()
 {
-	status = DS4ButtonStatus::None;
+	status = None;
 }
 
-DS4Button::DS4Button(bool isButtonDown)
+DS4Button::DS4Button(const bool isButtonDown)
 {
 	ChangeStatus(isButtonDown);
 }
 
-void DS4Button::ChangeStatus(bool isButtonDown)
+void DS4Button::ChangeStatus(const bool isButtonDown)
 {
-	if (isButtonDown == true)
+	if (isButtonDown)
 	{
-		if (status == DS4ButtonStatus::None)
+		if (status == None)
 		{
-			status = DS4ButtonStatus::Push;
+			status = Push;
 			return;
 		}
 
-		if (status == DS4ButtonStatus::Push)
+		if (status == Push)
 		{
-			status = DS4ButtonStatus::Pushing;
+			status = Pushing;
 			return;
 		}
 
-		if (status == DS4ButtonStatus::UnPush)
+		if (status == UnPush)
 		{
-			status = DS4ButtonStatus::Push;
+			status = Push;
 		}
 		return;
 	}
 
-	if (isButtonDown == false)
+	if (!isButtonDown)
 	{
-		if (status == DS4ButtonStatus::Push)
+		if (status == Push)
 		{
-			status = DS4ButtonStatus::UnPush;
+			status = UnPush;
 			return;
 		}
 
-		if (status == DS4ButtonStatus::Pushing)
+		if (status == Pushing)
 		{
-			status = DS4ButtonStatus::UnPush;
+			status = UnPush;
 			return;
 		}
 
-		if (status == DS4ButtonStatus::UnPush)
+		if (status == UnPush)
 		{
-			status = DS4ButtonStatus::None;
+			status = None;
 		}
 		return;
 	}

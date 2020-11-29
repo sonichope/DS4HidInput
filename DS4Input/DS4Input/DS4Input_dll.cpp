@@ -14,26 +14,25 @@ EXPORT_API bool GetController()
 	return true;
 }
 
-EXPORT_API bool ControllerChack(int id)
+EXPORT_API bool ControllerCheck(const int id)
 {
 	return manager.IsDevice(id);
 }
 
-EXPORT_API bool ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b)
+EXPORT_API bool ChangeColor(const int id, const UCHAR r, const UCHAR g, const UCHAR b)
 {
 	manager.ChangeColor(id, r, g, b);
 	return true;
 }
 
-EXPORT_API void ChangeVibration(int id, UCHAR right, UCHAR left)
+EXPORT_API void ChangeVibration(const int id, const UCHAR right, const UCHAR left)
 {
 	manager.ChangeVibration(id, right, left);
 }
 
-EXPORT_API void SendOutput(int id)
+EXPORT_API void SendOutput(const int id)
 {
 	manager.SendOutput(id);
-	return;
 }
 
 EXPORT_API bool UpdateInputReport()
@@ -42,22 +41,22 @@ EXPORT_API bool UpdateInputReport()
 	return true;
 }
 
-EXPORT_API bool GetButton(int id, DS4KeyType keyType)
+EXPORT_API bool GetButton(const int id, const DS4KeyType keyType)
 {
 	return manager.GetButton(id, keyType);
 }
 
-EXPORT_API bool GetButtonDown(int id, DS4KeyType keyType)
+EXPORT_API bool GetButtonDown(const int id, const DS4KeyType keyType)
 {
 	return manager.GetButtonDown(id,keyType);
 }
 
-EXPORT_API bool GetButtonUp(int id, DS4KeyType keyType)
+EXPORT_API bool GetButtonUp(const int id, const DS4KeyType keyType)
 {
 	return manager.GetButtonUp(id, keyType);
 }
 
-EXPORT_API float GetAxis(int id, DS4AxisType keyType)
+EXPORT_API float GetAxis(const int id, const DS4AxisType keyType)
 {
 	return manager.GetAxis(id, keyType);
 }

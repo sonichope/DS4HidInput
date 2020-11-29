@@ -11,7 +11,7 @@ extern "C"
 	EXPORT_API bool GetController();
 
 	//コントローラのチェック
-	EXPORT_API bool ControllerChack(int id);
+	EXPORT_API bool ControllerCheck(int id);
 
 	//色の変更
 	EXPORT_API bool ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b);

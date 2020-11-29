@@ -18,11 +18,11 @@ using namespace std;
 class HidDevice
 {
 public:
-	HidDevice Create(char* path, int id);
-	HANDLE GetHandle();
-	USHORT GetProductID();
-	USHORT GetVendorID();
-	char* GetDevicePath();
+	HidDevice Create(const char* path, int id);
+	HANDLE GetHandle() const;
+	USHORT GetProductID() const;
+	USHORT GetVendorID() const;
+	char* GetDevicePath() const;
 	HIDP_CAPS GetCapabilities();
 	void Destroy();
 	bool isDevice;

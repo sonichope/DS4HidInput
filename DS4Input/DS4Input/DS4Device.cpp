@@ -1,27 +1,64 @@
 #include "DS4Device.h"
 
-DS4Device DS4Device::Create(HidDevice device, int controllerId)
+const int BT_OUTPUT_REPORT_LENGTH = 78;
+const int BT_INPUT_REPORT_LENGTH = 547;
+
+DS4Device::DS4Device(): device(), inputDataLength(0), outputDataLength(0), status(), controllerNum(0)
+{
+}
+
+DS4Device DS4Device::Create(HidDevice device, const int controllerId)
 {
 	this->device = device;
 	this->controllerNum = controllerId;
 	outputDataLength = device.GetCapabilities().OutputReportByteLength;
 	inputDataLength = device.GetCapabilities().InputReportByteLength;
 
-	for (int i = 0; i < inputDataLength; i++)
+	if(outputDataLength == 547)
+	{
+		outputData = new UCHAR[BT_OUTPUT_REPORT_LENGTH];
+		inputData = new UCHAR[BT_INPUT_REPORT_LENGTH];
+		outputDataLength = BT_OUTPUT_REPORT_LENGTH;
+		inputDataLength = BT_INPUT_REPORT_LENGTH;
+	}else
+	{
+		outputData = new UCHAR[outputDataLength];
+		inputData = new UCHAR[inputDataLength];
+	}
+	
+
+	for (auto i = 0; i < inputDataLength; i++)
 	{
 		inputData[i] = 0;
 	}
-	for (int i = 0; i < outputDataLength; i++)
+	for (auto i = 0; i < outputDataLength; i++)
 	{
 		outputData[i] = 1;
 	}
 
-	outputData[0] = 0x05;//レポートID
-	outputData[1] = 0x03;//モード(0:オフ,1:揺れのみ,2:光だけ,3:両方)
-	outputData[2] = 0x00;//LEDモード(最下位が0:ずっと発行,1:一瞬)
-	outputData[3] = 0x00;//改行
-	outputData[4] = 0x00;//Rモータ
-	outputData[5] = 0x00;//Lモータ
+	if (inputDataLength == 547)
+	{
+		outputData[0] = 0x11;//レポートID
+		outputData[1] = 0x80;//定数
+		outputData[3] = 0xff;//定数
+		outputData[6] = 0x00;//Rモータ
+		outputData[7] = 0x00;//Lモータ
+		outputData[8] = 0x00;//Red
+		outputData[9] = 0x00;//G
+		outputData[10] = 0x00;//B
+		outputData[11] = 0x00;//フラッシュon
+		outputData[12] = 0x00;//フラッシュoff
+	}
+	else
+	{
+		outputData[0] = 0x05;//レポートID
+		outputData[1] = 0x03;//モード(0:オフ,1:揺れのみ,2:光だけ,3:両方)
+		outputData[2] = 0x00;//LEDモード(最下位が0:ずっと発行,1:一瞬)
+		outputData[3] = 0x00;//改行
+		outputData[4] = 0x00;//Rモータ
+		outputData[5] = 0x00;//Lモータ
+	}
+	
 
 	switch (controllerId)
 	{
@@ -47,319 +84,248 @@ DS4Device DS4Device::Create(HidDevice device, int controllerId)
 bool DS4Device::SendOutputReport()
 {
 	BOOL result;
-	DWORD sizet = 0;
+	DWORD size = 0;
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	result = WriteFile(device.GetHandle(), outputData, outputDataLength, &sizet, &overlapped);
+	if(inputDataLength == BT_INPUT_REPORT_LENGTH)
+	{
+		result = HidD_SetOutputReport(device.GetHandle(), outputData, outputDataLength);
+	}
+	else
+	{
+		result = WriteFile(device.GetHandle(), outputData, outputDataLength, &size, &overlapped);
+	}
 	return result;
 }
 
-bool DS4Device::ChangeLedColor(LED led)
+bool DS4Device::ChangeLedColor(const LED led) const
 {
-	outputData[6] = led.red;
-	outputData[7] = led.green;
-	outputData[8] = led.blue;	
+	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
+	{
+		outputData[8] = led.red;
+		outputData[9] = led.green;
+		outputData[10] = led.blue;
+	}
+	else
+	{
+		outputData[6] = led.red;
+		outputData[7] = led.green;
+		outputData[8] = led.blue;
+	}
+	
 	return true;
 }
 
-void DS4Device::ChangeVibration(UCHAR right, UCHAR left)
+void DS4Device::ChangeVibration(const UCHAR right, const UCHAR left) const
 {
-	outputData[4] = right;
-	outputData[5] = left;
+	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
+	{
+		outputData[6] = right;
+		outputData[7] = left;
+	}
+	else
+	{
+		outputData[4] = right;
+		outputData[5] = left;
+	}
+	
 }
 
 bool DS4Device::GetInputReport()
 {
-	DWORD sizet = 0;
+	DWORD size = 0;
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &sizet, &overlapped);
+	const auto result = ReadFile(device.GetHandle(), inputData, inputDataLength, &size, &overlapped);
+	device.isDevice = result;
 
-	//ボタンの入力の保存
-	UCHAR data = inputData[5];
-	status.square.ChangeStatus((data & 0x10) == 0x10 ? true : false);
-	status.cross.ChangeStatus((data & 0x20) == 0x20 ? true : false);
-	status.circle.ChangeStatus((data & 0x40) == 0x40 ? true : false);
-	status.triangle.ChangeStatus((data & 0x80) == 0x80 ? true : false);
-	data &= 0x0F;
-	bool d[4] = {false, false, false, false};
-	switch (data)
+	if (!static_cast<bool>(result)) { return result; }
+
+	if(inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
-	case 0:
-		d[0] = true;
-		break;
-	case 1:
-		d[0] = true;
-		d[1] = true;
-		break;
-	case 2:
-		d[1] = true;
-		break;
-	case 3:
-		d[1] = true;
-		d[2] = true;
-		break;
-	case 4:
-		d[2] = true;
-		break;
-	case 5:
-		d[2] = true;
-		d[3] = true;
-		break;
-	case 6:
-		d[3] = true;
-		break;
-	case 7:
-		d[3] = true;
-		d[0] = true;
-		break;
+		auto data = inputData[1];
+		if (data == 0x40) { return result; }
+		data = inputData[7];
+		status.square.ChangeStatus((data & 0x10) == 0x10);
+		status.cross.ChangeStatus((data & 0x20) == 0x20);
+		status.circle.ChangeStatus((data & 0x40) == 0x40);
+		status.triangle.ChangeStatus((data & 0x80) == 0x80);
+		data &= 0x0F;
+		bool d[4] = { false, false, false, false };
+		switch (data)
+		{
+		case 0:
+			d[0] = true;
+			break;
+		case 1:
+			d[0] = true;
+			d[1] = true;
+			break;
+		case 2:
+			d[1] = true;
+			break;
+		case 3:
+			d[1] = true;
+			d[2] = true;
+			break;
+		case 4:
+			d[2] = true;
+			break;
+		case 5:
+			d[2] = true;
+			d[3] = true;
+			break;
+		case 6:
+			d[3] = true;
+			break;
+		case 7:
+			d[3] = true;
+			d[0] = true;
+			break;
+		}
+		status.up.ChangeStatus(d[0]);
+		status.right.ChangeStatus(d[1]);
+		status.down.ChangeStatus(d[2]);
+		status.left.ChangeStatus(d[3]);
+
+		data = inputData[8];
+		status.l1.ChangeStatus((data & 0x01) == 0x01);
+		status.r1.ChangeStatus((data & 0x02) == 0x02);
+		status.share.ChangeStatus((data & 0x10) == 0x10);
+		status.option.ChangeStatus((data & 0x20) == 0x20);
+		status.l3.ChangeStatus((data & 0x40) == 0x40);
+		status.r3.ChangeStatus((data & 0x80) == 0x80);
+		status.l2 = (data & 0x04) == 0x04 ? 0xFF : 0x00;
+		status.r2 = (data & 0x08) == 0x08 ? 0xFF : 0x00;
+
+		//左スティックの入力の保存
+		data = inputData[3];
+		status.leftStickX = (data - 127) / 127.0f;
+		data = inputData[4];
+		status.leftStickY = (data - 127) / 127.0f;
+
+		//右スティックの入力の保存
+		data = inputData[5];
+		status.rightStickX = (data - 127) / 127.0f;
+		data = inputData[6];
+		status.rightStickY = (data - 127) / 127.0f;
+
 	}
-	status.up.ChangeStatus(d[0]);
-	status.right.ChangeStatus(d[1]);
-	status.down.ChangeStatus(d[2]);
-	status.left.ChangeStatus(d[3]);
-	
-	data = inputData[6];
-	status.l1.ChangeStatus((data & 0x01) == 0x01 ? true : false);
-	status.r1.ChangeStatus((data & 0x02) == 0x02 ? true : false);
-	status.share.ChangeStatus((data & 0x10) == 0x10 ? true : false);
-	status.option.ChangeStatus((data & 0x20) == 0x20 ? true : false);
-	status.l3.ChangeStatus((data & 0x40) == 0x40 ? true : false);
-	status.r3.ChangeStatus((data & 0x80) == 0x80 ? true : false);
+	else
+	{
+		//ボタンの入力の保存
+		auto data = inputData[5];
+		status.square.ChangeStatus((data & 0x10) == 0x10);
+		status.cross.ChangeStatus((data & 0x20) == 0x20);
+		status.circle.ChangeStatus((data & 0x40) == 0x40);
+		status.triangle.ChangeStatus((data & 0x80) == 0x80);
+		data &= 0x0F;
+		bool d[4] = { false, false, false, false };
+		switch (data)
+		{
+		case 0:
+			d[0] = true;
+			break;
+		case 1:
+			d[0] = true;
+			d[1] = true;
+			break;
+		case 2:
+			d[1] = true;
+			break;
+		case 3:
+			d[1] = true;
+			d[2] = true;
+			break;
+		case 4:
+			d[2] = true;
+			break;
+		case 5:
+			d[2] = true;
+			d[3] = true;
+			break;
+		case 6:
+			d[3] = true;
+			break;
+		case 7:
+			d[3] = true;
+			d[0] = true;
+			break;
+		}
+		status.up.ChangeStatus(d[0]);
+		status.right.ChangeStatus(d[1]);
+		status.down.ChangeStatus(d[2]);
+		status.left.ChangeStatus(d[3]);
 
-	//左スティックの入力の保存
-	data = inputData[1];
-	status.leftStickX = (data - 127) / 127.0f;
-	data = inputData[2];
-	status.leftStickY = (data - 127) / 127.0f;
+		data = inputData[6];
+		status.l1.ChangeStatus((data & 0x01) == 0x01);
+		status.r1.ChangeStatus((data & 0x02) == 0x02);
+		status.share.ChangeStatus((data & 0x10) == 0x10);
+		status.option.ChangeStatus((data & 0x20) == 0x20);
+		status.l3.ChangeStatus((data & 0x40) == 0x40);
+		status.r3.ChangeStatus((data & 0x80) == 0x80);
 
-	//右スティックの入力の保存
-	data = inputData[3];
-	status.rightStickX = (data - 127) / 127.0f;
-	data = inputData[4];
-	status.rightStickY = (data - 127) / 127.0f;
+		//左スティックの入力の保存
+		data = inputData[1];
+		status.leftStickX = (data - 127) / 127.0f;
+		data = inputData[2];
+		status.leftStickY = (data - 127) / 127.0f;
 
-	//L2とR2の入力の保存
-	data = inputData[8];
-	status.l2 = data / 255.0f;
-	data = inputData[9];
-	status.r2 = data / 255.0f;
+		//右スティックの入力の保存
+		data = inputData[3];
+		status.rightStickX = (data - 127) / 127.0f;
+		data = inputData[4];
+		status.rightStickY = (data - 127) / 127.0f;
 
-	return true;
+		//L2とR2の入力の保存
+		data = inputData[8];
+		status.l2 = data / 255.0f;
+		data = inputData[9];
+		status.r2 = data / 255.0f;
+	}
+
+	return result;
 }
 
 bool DS4Device::Destroy()
 {
 	ChangeLedColor(LED(0, 0, 0));
 	SendOutputReport();
+	delete[] inputData;
+	inputData = nullptr;
+	delete[] outputData;
+	outputData = nullptr;
 	device.Destroy();
 	return true;
 }
 
-bool DS4Device::IsDS4Device()
+bool DS4Device::IsDS4Device() const
 {
 	return device.isDevice;
 }
 
-bool DS4Device::GetButton(DS4KeyType keyType)
+bool DS4Device::GetButton(const DS4KeyType keyType) const
 {
-	bool isDown = false;
-	DS4ButtonStatus statusData;
-	switch (keyType)
-	{
-	case DS4KeyType::Square:
-		statusData = status.square.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Cross:
-		statusData = status.cross.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Circle:
-		statusData = status.circle.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Triangle:
-		statusData = status.triangle.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Up:
-		statusData = status.up.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Right:
-		statusData = status.right.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Down:
-		statusData = status.down.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Left:
-		statusData = status.left.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::L1:
-		statusData = status.l1.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::R1:
-		statusData = status.r1.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::SHARE:
-		statusData = status.share.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::OPTION:
-		statusData = status.option.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::L3:
-		statusData = status.l3.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::R3:
-		statusData = status.r3.status;
-		if (statusData == DS4ButtonStatus::Pushing || statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	}
-	return isDown;
+	DS4ButtonStatus statusData = {};
+	statusData = status.data[keyType].status;
+	return statusData == Pushing || statusData == Push;
 }
 
-bool DS4Device::GetButtonDown(DS4KeyType keyType)
+bool DS4Device::GetButtonDown(const DS4KeyType keyType) const
 {
-	bool isDown = false;
-	DS4ButtonStatus statusData;
-	switch (keyType)
-	{
-	case DS4KeyType::Square:
-		statusData = status.square.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Cross:
-		statusData = status.cross.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Circle:
-		statusData = status.circle.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Triangle:
-		statusData = status.triangle.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Up:
-		statusData = status.up.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Right:
-		statusData = status.right.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Down:
-		statusData = status.down.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::Left:
-		statusData = status.left.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::L1:
-		statusData = status.l1.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::R1:
-		statusData = status.r1.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::SHARE:
-		statusData = status.share.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::OPTION:
-		statusData = status.option.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::L3:
-		statusData = status.l3.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	case DS4KeyType::R3:
-		statusData = status.r3.status;
-		if (statusData == DS4ButtonStatus::Push) { isDown = true; }
-		break;
-	}
-	return isDown;
+	DS4ButtonStatus statusData = {};
+	statusData = status.data[keyType].status;
+	return statusData == Push;
 }
 
-bool DS4Device::GetButtonUp(DS4KeyType keyType)
+bool DS4Device::GetButtonUp(const DS4KeyType keyType) const
 {
-	bool isUp = false;
-	DS4ButtonStatus statusData;
-	switch (keyType)
-	{
-	case DS4KeyType::Square:
-		statusData = status.square.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Cross:
-		statusData = status.cross.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Circle:
-		statusData = status.circle.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Triangle:
-		statusData = status.triangle.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Up:
-		statusData = status.up.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Right:
-		statusData = status.right.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Down:
-		statusData = status.down.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::Left:
-		statusData = status.left.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::L1:
-		statusData = status.l1.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::R1:
-		statusData = status.r1.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::SHARE:
-		statusData = status.share.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::OPTION:
-		statusData = status.option.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::L3:
-		statusData = status.l3.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	case DS4KeyType::R3:
-		statusData = status.r3.status;
-		if (statusData == DS4ButtonStatus::UnPush) { isUp = true; }
-		break;
-	}
-	return isUp;
+	DS4ButtonStatus statusData = {};
+	statusData = status.data[keyType].status;
+	return statusData == UnPush;
 }
 
-float DS4Device::GetAxis(DS4AxisType axisType)
+float DS4Device::GetAxis(const DS4AxisType axisType) const
 {
 	switch (axisType)
 	{
