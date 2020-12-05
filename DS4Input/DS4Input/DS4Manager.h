@@ -10,6 +10,7 @@ public:
 	void ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b);
 	void ChangePlayerLight(int id, const UCHAR val);
 	void ChangeVibration(int id, UCHAR right, UCHAR left);
+	void ChangeTriggerLock(int id, UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left);
 	void SendOutput(int id);
 	void InputUpdate();
 	bool GetButton(int id, UCHAR key);
@@ -20,5 +21,4 @@ public:
 
 private:
 	DSDevice* dsDevice[4];
-	int connectionNum = 0;
 };

@@ -22,11 +22,12 @@ struct DS4Status
 			DS4Button option;
 			DS4Button l3;
 			DS4Button r3;
+			DS4Button home;
 		};
 
 		struct
 		{
-			DS4Button data[14];
+			DS4Button data[15];
 		};
 	};
 

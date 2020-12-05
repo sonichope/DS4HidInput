@@ -25,7 +25,7 @@ public:
 	char* GetDevicePath();
 	HIDP_CAPS GetCapabilities();
 	void Destroy();
-	bool isDevice;
+	BOOL isDevice;
 
 private:
 	USHORT productID;

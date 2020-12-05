@@ -10,6 +10,7 @@ public:
 	void ChangePlayerLight(UCHAR val) override;
 	bool SendOutputReport() override;
 	void ChangeVibration(UCHAR right, UCHAR left) override;
+	void ChangeTriggerLock(UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left) override;
 	bool GetInputReport() override;
 	bool Destroy() override;
 	bool IsDSDevice() override;
@@ -25,6 +26,6 @@ private:
 	UCHAR outputData[48];
 	UCHAR inputData[64];
 	DSenseStatus status;
-	int controllerNum;
+	int controllerNum = -1;
 };
 

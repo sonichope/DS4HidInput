@@ -90,6 +90,7 @@ bool DS4Device::SendOutputReport()
 	{
 		result = WriteFile(device.GetHandle(), outputData, outputDataLength, &sizet, &overlapped);
 	}
+	device.isDevice = result;
 	return result;
 }
 
@@ -129,10 +130,10 @@ bool DS4Device::GetInputReport()
 	DWORD size = 0;
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	const auto result = ReadFile(device.GetHandle(), inputData, inputDataLength, &size, &overlapped);
+	const BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &size, &overlapped);
 	device.isDevice = result;
 
-	if (!static_cast<bool>(result)) { return result; }
+	if (!result) return result;
 
 	if (inputDataLength == BT_INPUT_REPORT_LENGTH)
 	{
@@ -188,8 +189,8 @@ bool DS4Device::GetInputReport()
 		status.option.ChangeStatus((data & 0x20) == 0x20);
 		status.l3.ChangeStatus((data & 0x40) == 0x40);
 		status.r3.ChangeStatus((data & 0x80) == 0x80);
-		status.l2 = (data & 0x04) == 0x04 ? 0xFF : 0x00;
-		status.r2 = (data & 0x08) == 0x08 ? 0xFF : 0x00;
+		status.l2 = (data & 0x04) == 0x04 ? 255.0f : 0.0f;
+		status.r2 = (data & 0x08) == 0x08 ? 255.0f : 0.0f;
 
 		//左スティックの入力の保存
 		data = inputData[3];
@@ -294,11 +295,7 @@ bool DS4Device::Destroy()
 
 bool DS4Device::IsDSDevice()
 {
-	DWORD sizet = 0;
-	OVERLAPPED overlapped;
-	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &sizet, &overlapped);
-	return result;
+	return device.isDevice;
 }
 
 bool DS4Device::GetButton(UCHAR keyType)

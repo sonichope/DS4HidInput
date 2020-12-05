@@ -24,5 +24,5 @@ private:
 	UCHAR* outputData = nullptr;
 	UCHAR* inputData = nullptr;
 	DS4Status status;
-	int controllerNum;
+	int controllerNum = -1;
 };

@@ -8,6 +8,7 @@ public:
 	virtual bool ChangeLedColor(LED led) = 0;
 	virtual void ChangePlayerLight(UCHAR val) {};
 	virtual void ChangeVibration(UCHAR right, UCHAR left) = 0;
+	virtual void ChangeTriggerLock(UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left) {};
 	virtual bool GetInputReport() = 0;
 	virtual bool Destroy() = 0;
 	virtual bool IsDSDevice() = 0;

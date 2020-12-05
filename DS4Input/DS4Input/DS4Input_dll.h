@@ -22,6 +22,9 @@ extern "C"
 	//振動の変更
 	EXPORT_API void ChangeVibration(int id, UCHAR right, UCHAR left);
 
+	//トリガーのロック
+	EXPORT_API void ChangeTriggerLock(int id, UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left);
+
 	//アウトプットレポートの送信
 	EXPORT_API void SendOutput(int id);
 

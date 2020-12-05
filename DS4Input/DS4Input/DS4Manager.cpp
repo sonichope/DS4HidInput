@@ -11,7 +11,6 @@ DS4Manager::DS4Manager()
 
 void DS4Manager::GetDevice()
 {
-	connectionNum = 0;
 	GUID hidGuid;
 	HDEVINFO hdevInfo;
 	HidD_GetHidGuid(&hidGuid);
@@ -42,14 +41,22 @@ void DS4Manager::GetDevice()
 
 				if (device.GetVendorID() == 0x54C && device.GetProductID() == 0xce6) {
 					//	PS5コントローラー
-					dsDevice[connectionNum] = new DSenseDevice(device, connectionNum);
-					connectionNum++;
+					for (int i = 0; i < 4; i++) {
+						if (!dsDevice[i]) {
+							dsDevice[i] = new DSenseDevice(device, i);
+							break;
+						}
+					}
 				}
 				else if (device.GetVendorID() == 0x54c && (device.GetProductID() == 0x5c4 || device.GetProductID() == 0x9CC))
 				{
-					//PS4コントローラーとして設定
-					dsDevice[connectionNum] = new DS4Device(device, connectionNum);
-					connectionNum++;
+					for (int i = 0; i < 4; i++) {
+						if (!dsDevice[i]) {
+							//PS4コントローラーとして設定
+							dsDevice[i] = new DS4Device(device, i);
+							break;
+						}
+					}
 				}
 				else
 				{
@@ -66,7 +73,14 @@ void DS4Manager::GetDevice()
 bool DS4Manager::IsDevice(int id)
 {
 	if (!dsDevice[id]) return false;
-	return dsDevice[id]->IsDSDevice();
+	bool device = dsDevice[id]->IsDSDevice();
+	if (!device)
+	{
+		dsDevice[id]->Destroy();
+		delete dsDevice[id];
+		dsDevice[id] = nullptr;
+	}
+	return device;
 }
 
 void DS4Manager::ChangeColor(int id, const UCHAR r, const UCHAR g, const UCHAR b)
@@ -85,6 +99,12 @@ void DS4Manager::ChangeVibration(int id, UCHAR right, UCHAR left)
 {
 	if (!IsDevice(id)) return;
 	dsDevice[id]->ChangeVibration(right, left);
+}
+
+void DS4Manager::ChangeTriggerLock(int id, UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left)
+{
+	if (!IsDevice(id)) return;
+	dsDevice[id]->ChangeTriggerLock(rMode, right, lMode, left);
 }
 
 void DS4Manager::SendOutput(int id)
@@ -129,10 +149,11 @@ float DS4Manager::GetAxis(int id, UCHAR axis)
 
 void DS4Manager::Destroy()
 {
-	for (int i = 0; i < connectionNum; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		if (dsDevice[i]) {
 			dsDevice[i]->Destroy();
+			dsDevice[i] = nullptr;
 		}
 	}
 }

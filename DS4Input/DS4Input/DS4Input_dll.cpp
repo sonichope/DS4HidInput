@@ -36,6 +36,11 @@ EXPORT_API void ChangeVibration(int id, UCHAR right, UCHAR left)
 	manager.ChangeVibration(id, right, left);
 }
 
+EXPORT_API void ChangeTriggerLock(int id, UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left)
+{
+	manager.ChangeTriggerLock(id, rMode, right, lMode, left);
+}
+
 EXPORT_API void SendOutput(int id)
 {
 	manager.SendOutput(id);

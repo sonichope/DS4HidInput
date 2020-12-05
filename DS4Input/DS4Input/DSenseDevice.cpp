@@ -32,7 +32,7 @@ DSenseDevice::DSenseDevice(HidDevice device, int controllerId)
 	outputData[11] = 0x0; // Rトリガー 1:抵抗 2:ロック
 	outputData[12] = 0x00; //Rトリガー 上位bitがロックの位置値が大きくなると位置が下になる
 
-	outputData[22] = 0x0; // Lトリガー
+	outputData[22] = 0x00; // Lトリガー
 	outputData[23] = 0x00; // Lトリガー
 
 	outputData[44] = 0x00; // プレイヤーライト1bitづつで点灯する、最大5bit
@@ -71,8 +71,18 @@ bool DSenseDevice::GetInputReport()
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
 	BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &sizet, &overlapped);
+	device.isDevice = result;
+	if (!result) return false;
+	
 
-	UCHAR data = inputData[6];
+#ifdef DEBUG
+	for (int i = 0; i < 11; i++) {
+		printf(" %d ", inputData[i]);
+	}
+	printf("\n");
+#endif // DEBUG
+
+	UCHAR data = inputData[8];
 	status.square.ChangeStatus((data & 0x10) == 0x10 ? true : false);
 	status.cross.ChangeStatus((data & 0x20) == 0x20 ? true : false);
 	status.circle.ChangeStatus((data & 0x40) == 0x40 ? true : false);
@@ -149,8 +159,12 @@ bool DSenseDevice::GetInputReport()
 bool DSenseDevice::Destroy()
 {
 	ChangeLedColor(LED(0, 0, 0));
+	ChangeVibration(0, 0);
+	ChangeTriggerLock(0, 0, 0, 0);
+	ChangePlayerLight(0);
 	SendOutputReport();
 	device.Destroy();
+	controllerNum = -1;
 	return true;
 }
 
@@ -168,6 +182,15 @@ void DSenseDevice::ChangeVibration(UCHAR right, UCHAR left)
 	outputData[4] = left;
 }
 
+void DSenseDevice::ChangeTriggerLock(UCHAR rMode, UCHAR right, UCHAR lMode, UCHAR left)
+{
+	outputData[11] = rMode;
+	outputData[12] = right; //Rトリガー 上位bitがロックの位置値が大きくなると位置が下になる
+
+	outputData[22] = lMode; // Lトリガー
+	outputData[23] = left; // Lトリガー
+}
+
 void DSenseDevice::ChangePlayerLight(UCHAR val)
 {
 	outputData[44] = val & 0x1f;
@@ -180,16 +203,13 @@ bool DSenseDevice::SendOutputReport()
 	OVERLAPPED overlapped;
 	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
 	result = WriteFile(device.GetHandle(), outputData, outputDataLength, &sizet, &overlapped);
+	device.isDevice = result;
 	return result;
 }
 
 bool DSenseDevice::IsDSDevice()
 {
-	DWORD sizet = 0;
-	OVERLAPPED overlapped;
-	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	BOOL result = ReadFile(device.GetHandle(), inputData, inputDataLength, &sizet, &overlapped);
-	return result;
+	return device.isDevice;
 }
 
 bool DSenseDevice::GetButton(UCHAR keyType)
@@ -251,7 +271,7 @@ bool DSenseDevice::GetButton(UCHAR keyType)
 		if (statusData == DSButtonStatus::Pushing || statusData == DSButtonStatus::Push) { isDown = true; }
 		break;
 	case DSKeyType::R3:
-		statusData = status.l3.status;
+		statusData = status.r3.status;
 		if (statusData == DSButtonStatus::Pushing || statusData == DSButtonStatus::Push) { isDown = true; }
 		break;
 	case DSKeyType::HOME:

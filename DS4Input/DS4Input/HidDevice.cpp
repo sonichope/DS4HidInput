@@ -33,7 +33,7 @@ HidDevice HidDevice::Create(char * path, int id)
 	}
 
 	isCapabilities = false;
-	isDevice = true;
+	isDevice = 1;
 
 	return *this;
 }
@@ -82,7 +82,7 @@ HIDP_CAPS HidDevice::GetCapabilities()
 
 void HidDevice::Destroy()
 {
-	isDevice = false;
+	isDevice = 0;
 	CloseHandle(deviceHandle);
 	delete[] devicePath;
 }
