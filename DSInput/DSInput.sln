@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2046
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DS4Input", "DS4Input\DS4Input.vcxproj", "{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Debug|x64.ActiveCfg = Debug|x64
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Debug|x64.Build.0 = Debug|x64
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Debug|x86.ActiveCfg = Debug|Win32
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Debug|x86.Build.0 = Debug|Win32
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Release|x64.ActiveCfg = Release|x64
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Release|x64.Build.0 = Release|x64
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Release|x86.ActiveCfg = Release|Win32
+		{FDA9376F-6BEB-4053-B7CB-762F707CC2C7}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {38C26D2B-993C-4F1F-B675-C8834E8EBC7B}
+	EndGlobalSection
+EndGlobal
