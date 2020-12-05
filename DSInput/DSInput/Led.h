@@ -9,9 +9,9 @@ struct LED
 	{
 		struct
 		{
-			uchar red;
-			uchar green;
 			uchar blue;
+			uchar green;
+			uchar red;
 		};
 		uint ui;
 	};
